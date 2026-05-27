@@ -129,8 +129,13 @@ function renderSettingsTab() {
         placeholder="粘贴阿里云百炼平台申请的 API Key..."
         class="w-full bg-[#1f2937] border border-gray-700 rounded p-2 text-sm text-gray-300 focus:outline-none focus:border-indigo-500"
       />
+      <p class="text-[10px] text-gray-500 mt-1 leading-relaxed">
+        * API Key 仅保存在本浏览器的 localStorage，
+        <span class="text-emerald-400">不会上传到任何服务器</span>。
+        刷新页面不丢失，清除浏览器数据时会一并删除。
+      </p>
       <p class="text-[10px] text-gray-500 mt-1">
-        * 100% 运行在本地浏览器。可以去
+        * 没有 Key 可以去
         <a
           href="https://bailian.console.aliyun.com/?apiKey=1"
           target="_blank"
