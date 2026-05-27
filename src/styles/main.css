@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+
+/* 全局基调：深色赛博朋克终端风 */
+body {
+  background-color: #0b0f19;
+  color: #f3f4f6;
+  font-family: monospace;
+}
+
+/* 操作面板的柔光 */
+.glow {
+  box-shadow: 0 0 15px rgb(99 102 241 / 0.2);
+}
+
+/* 按钮工作中：彩色渐变流光 + 外发光呼吸，营造"光打在毛玻璃后"的赛博感 */
+@keyframes busy-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes busy-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 18px rgb(99 102 241 / 0.55),
+      0 0 36px rgb(236 72 153 / 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 28px rgb(236 72 153 / 0.55),
+      0 0 56px rgb(56 189 248 / 0.4);
+  }
+}
+
+button.busy-glow {
+  background: linear-gradient(
+    90deg,
+    #6366f1,
+    #ec4899,
+    #06b6d4,
+    #10b981,
+    #f59e0b,
+    #6366f1
+  );
+  background-size: 300% 100%;
+  animation:
+    busy-shift 4s linear infinite,
+    busy-glow-pulse 2.2s ease-in-out infinite;
+}
+
+/* 事故报告卡片：靛蓝霓虹描边 */
+.neon-border {
+  border: 1px solid rgb(99 102 241 / 0.3);
+  box-shadow:
+    0 0 30px rgb(99 102 241 / 0.1),
+    inset 0 0 15px rgb(99 102 241 / 0.05);
+}
+
+/* 增长复盘卡片：翠绿霓虹描边 */
+.neon-border-emerald {
+  border: 1px solid rgb(16 185 129 / 0.3);
+  box-shadow:
+    0 0 30px rgb(16 185 129 / 0.1),
+    inset 0 0 15px rgb(16 185 129 / 0.05);
+}
+
+/* 转正评估卡片：天蓝霓虹描边 */
+.neon-border-sky {
+  border: 1px solid rgb(56 189 248 / 0.3);
+  box-shadow:
+    0 0 30px rgb(56 189 248 / 0.1),
+    inset 0 0 15px rgb(56 189 248 / 0.05);
+}
+
+/* 尽调报告卡片：琥珀金霓虹描边 */
+.neon-border-amber {
+  border: 1px solid rgb(251 191 36 / 0.3);
+  box-shadow:
+    0 0 30px rgb(251 191 36 / 0.1),
+    inset 0 0 15px rgb(251 191 36 / 0.05);
+}
+
+/* 输入框滚动条：深色样式，与深色输入框协调 */
+textarea {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+  resize: none;
+}
+
+/* API Key 输入框：视觉上遮成圆点，但 type 保持 text，避免被 Chrome 当作
+   密码字段反复弹保存提示（页面隔离已经由 tab + DOM 切换解决了回车被吞的问题，
+   这里只是设置 tab 内的视觉遮蔽）。Firefox 暂不支持此属性。 */
+#apiKey {
+  -webkit-text-security: disc;
+}
+
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: #374151;
+  border-radius: 4px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background-color: #4b5563;
+}
