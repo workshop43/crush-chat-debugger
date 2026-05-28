@@ -54,17 +54,6 @@
 
       <!-- 右栏：结果展示区（始终在位，没结果时显示占位提示） -->
       <div class="w-full lg:flex-1 flex flex-col items-center">
-        <!-- 导出控制台：仅在生成卡片后显示 -->
-        <div id="exportBar" class="hidden w-full flex justify-end mb-4 gap-4">
-          <button
-            id="exportBtn"
-            type="button"
-            class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-4 rounded transition duration-200"
-          >
-            📥 导出无损诊断卡片 (PNG)
-          </button>
-        </div>
-
         <!-- 占位提示：还没诊断时填满右栏，避免空荡 -->
         <div
           id="resultPlaceholder"
@@ -75,8 +64,22 @@
           <p class="text-xs mt-1 text-gray-700">在左侧粘贴聊天记录，点击「开始诊断」</p>
         </div>
 
-        <!-- 诊断卡片：由对应的报告模块渲染后插入此处 -->
-        <div id="cardSlot" class="w-full flex justify-center"></div>
+        <!-- 卡片 + 导出按钮组合：容器宽度收缩到卡片宽度，
+             导出按钮在卡片左上方、与卡片左边对齐 -->
+        <div class="w-fit">
+          <div id="exportBar" class="hidden mb-3">
+            <button
+              id="exportBtn"
+              type="button"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-4 rounded transition duration-200"
+            >
+              📥 导出无损诊断卡片 (PNG)
+            </button>
+          </div>
+
+          <!-- 诊断卡片：由对应的报告模块渲染后插入此处 -->
+          <div id="cardSlot"></div>
+        </div>
       </div>
     </div>
 
