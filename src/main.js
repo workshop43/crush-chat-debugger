@@ -8,10 +8,12 @@
  */
 import './styles/main.css';
 import { REPORTS, getReport } from './modules/reports/index.js';
-import { generateReport } from './modules/qwen.js';
+import { PROVIDERS, DEFAULT_PROVIDER, getProvider, generateReport } from './modules/providers.js';
 import { exportCard } from './modules/exporter.js';
 
-const API_KEY_STORAGE = 'crush-debugger:api-key';
+const PROVIDER_STORAGE = 'crush-debugger:provider';
+/** 每个 provider 的 API Key 分开存，互不覆盖。 */
+const apiKeyStorageKey = (id) => `crush-debugger:api-key:${id}`;
 
 /** 主功能 tab 的临时输入状态，跨 tab 切换时不丢失 */
 const state = {
@@ -22,22 +24,35 @@ const state = {
 const shell = {
   tabContent: document.getElementById('tabContent'),
   tabBtns: document.querySelectorAll('.tab-btn'),
-  resultWrapper: document.getElementById('resultWrapper'),
   cardSlot: document.getElementById('cardSlot'),
   exportBtn: document.getElementById('exportBtn'),
+  exportBar: document.getElementById('exportBar'),
+  resultPlaceholder: document.getElementById('resultPlaceholder'),
 };
 
 init();
 
 function init() {
+  migrateLegacyKey();
+
   shell.tabBtns.forEach((btn) => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
   shell.exportBtn.addEventListener('click', runExport);
 
-  // 首次进入：没存调用串就先去设置 tab 引导填入
-  const hasKey = !!localStorage.getItem(API_KEY_STORAGE);
+  // 首次进入：当前 provider 没存 Key 就先去设置 tab 引导填入
+  const providerId = localStorage.getItem(PROVIDER_STORAGE) || DEFAULT_PROVIDER;
+  const hasKey = !!localStorage.getItem(apiKeyStorageKey(providerId));
   switchTab(hasKey ? 'main' : 'settings');
+}
+
+/** 把旧版单一存储键（只有通义千问时代）迁移到按 provider 区分的新键。 */
+function migrateLegacyKey() {
+  const legacy = localStorage.getItem('crush-debugger:api-key');
+  if (legacy && !localStorage.getItem(apiKeyStorageKey('qwen'))) {
+    localStorage.setItem(apiKeyStorageKey('qwen'), legacy);
+    localStorage.removeItem('crush-debugger:api-key');
+  }
 }
 
 /** 切换 tab：先把当前 tab 的临时输入暂存，再物理重建目标 tab 的 DOM。 */
@@ -66,7 +81,8 @@ function captureCurrentTab() {
   }
   const apiKey = document.getElementById('apiKey');
   if (apiKey) {
-    localStorage.setItem(API_KEY_STORAGE, apiKey.value.trim());
+    const id = document.getElementById('providerSelect').value;
+    localStorage.setItem(apiKeyStorageKey(id), apiKey.value.trim());
   }
 }
 
@@ -117,8 +133,17 @@ function renderMainTab() {
 function renderSettingsTab() {
   shell.tabContent.innerHTML = `
     <div class="mb-4">
+      <label class="block text-xs text-indigo-300 mb-1" for="providerSelect">
+        STEP 1: 选择 AI 服务商
+      </label>
+      <select
+        id="providerSelect"
+        class="w-full bg-[#1f2937] border border-gray-700 rounded p-2 text-sm text-gray-300 focus:outline-none focus:border-indigo-500"
+      ></select>
+    </div>
+    <div class="mb-4">
       <label class="block text-xs text-indigo-300 mb-1" for="apiKey">
-        通义千问 API Key
+        STEP 2: 填入该服务商的 API Key
       </label>
       <input
         type="text"
@@ -126,7 +151,6 @@ function renderSettingsTab() {
         name="apiKey"
         autocomplete="off"
         spellcheck="false"
-        placeholder="粘贴阿里云百炼平台申请的 API Key..."
         class="w-full bg-[#1f2937] border border-gray-700 rounded p-2 text-sm text-gray-300 focus:outline-none focus:border-indigo-500"
       />
       <p class="text-[10px] text-gray-500 mt-1 leading-relaxed">
@@ -137,31 +161,61 @@ function renderSettingsTab() {
       <p class="text-[10px] text-gray-500 mt-1">
         * 没有 Key 可以去
         <a
-          href="https://bailian.console.aliyun.com/?apiKey=1"
+          id="applyLink"
+          href="#"
           target="_blank"
           class="text-indigo-400 underline"
           rel="noopener noreferrer"
-          >阿里云百炼</a
-        >
-        免费申请。
+        ></a>
+        申请。
       </p>
     </div>
   `;
 
+  const providerSelect = document.getElementById('providerSelect');
+  for (const [id, p] of Object.entries(PROVIDERS)) {
+    const option = document.createElement('option');
+    option.value = id;
+    option.textContent = `${p.label} · ${p.model}`;
+    providerSelect.appendChild(option);
+  }
+
   const input = document.getElementById('apiKey');
-  input.value = localStorage.getItem(API_KEY_STORAGE) || '';
+  const applyLink = document.getElementById('applyLink');
+
+  // 按选中 provider 刷新输入框内容、占位符、申请链接
+  const syncProviderUI = (id) => {
+    const p = getProvider(id);
+    input.value = localStorage.getItem(apiKeyStorageKey(id)) || '';
+    input.placeholder = p.placeholder;
+    applyLink.textContent = p.applyLabel;
+    applyLink.href = p.applyUrl;
+  };
+
+  const currentId = localStorage.getItem(PROVIDER_STORAGE) || DEFAULT_PROVIDER;
+  providerSelect.value = currentId;
+  syncProviderUI(currentId);
+
+  providerSelect.addEventListener('change', () => {
+    const id = providerSelect.value;
+    localStorage.setItem(PROVIDER_STORAGE, id);
+    syncProviderUI(id);
+  });
+
   input.addEventListener('input', () => {
-    localStorage.setItem(API_KEY_STORAGE, input.value.trim());
+    localStorage.setItem(apiKeyStorageKey(providerSelect.value), input.value.trim());
   });
 }
 
 async function runDiagnosis() {
-  const apiKey = (localStorage.getItem(API_KEY_STORAGE) || '').trim();
+  const providerId = localStorage.getItem(PROVIDER_STORAGE) || DEFAULT_PROVIDER;
+  const provider = getProvider(providerId);
+  const apiKey = (localStorage.getItem(apiKeyStorageKey(providerId)) || '').trim();
   const chatLog = document.getElementById('chatLog').value.trim();
   const report = getReport(document.getElementById('styleSelect').value);
 
   if (!apiKey) {
-    alert('请先到「设置」tab 填入 API Key！');
+    alert(`请先到「设置」tab 填入 ${provider.label} 的 API Key！`);
     switchTab('settings');
     return;
   }
@@ -173,15 +227,16 @@ async function runDiagnosis() {
   state.chatLog = chatLog;
   state.style = document.getElementById('styleSelect').value;
 
-  shell.resultWrapper.classList.add('hidden');
   const runBtn = document.getElementById('runBtn');
-  setBusy(runBtn, true, 'COMPILING... (本地向通义千问请求中...)');
+  setBusy(runBtn, true, 'COMPILING... (诊断生成中...)');
 
   try {
-    const data = await generateReport({ apiKey, report, chatLog });
+    const data = await generateReport({ apiKey, provider, report, chatLog });
     shell.cardSlot.replaceChildren(report.render(data));
-    shell.resultWrapper.classList.remove('hidden');
-    window.scrollTo({ top: shell.resultWrapper.offsetTop - 20, behavior: 'smooth' });
+    shell.resultPlaceholder.classList.add('hidden');
+    shell.exportBar.classList.remove('hidden');
+    // 窄屏堆叠时把卡片滚动进视野；宽屏左右布局下卡片已可见，block:nearest 不会乱跳
+    shell.cardSlot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (error) {
     alert(`诊断失败：${error.message}`);
   } finally {

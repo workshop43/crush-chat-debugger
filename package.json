@@ -16,7 +16,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "deploy:oss": "npm run build && ossutil cp -rf dist/ oss://${BUCKET:-crush-chat-debugger}/",
+    "deploy:cf": "npm run build && npx -y wrangler@latest pages deploy dist --project-name=crush-chat-debugger --branch=main --commit-dirty=true",
+    "deploy": "npm run deploy:cf"
   },
   "dependencies": {
     "html-to-image": "^1.11.13"

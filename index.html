@@ -13,56 +13,71 @@
     />
     <title>Crush 聊天记录 Debug 诊断卡片生成器</title>
   </head>
-  <body class="min-h-screen flex flex-col items-center justify-start p-4 py-12">
-    <!-- 操作面板 -->
-    <div class="w-full max-w-xl bg-[#111827] rounded-xl border border-gray-800 p-6 glow mb-8">
-      <div class="border-b border-gray-800 pb-4 mb-6">
-        <h1 class="text-xl font-bold text-indigo-400">⚡ CRUSH_CHAT_CARD_GENERATOR v1.0</h1>
-        <p class="text-xs text-gray-500 mt-1">
-          本地渲染引擎 · 100% 浏览器端运行 · API Key 与聊天记录均不离开你的设备
-        </p>
+  <body class="min-h-screen p-4 py-8 lg:py-12">
+    <!-- 左右两栏：左操作面板、右结果区；窄屏回退为上下堆叠 -->
+    <div class="mx-auto max-w-6xl flex flex-col lg:flex-row gap-6 lg:gap-8 items-start justify-center">
+      <!-- 左栏：操作面板（固定宽度，不随结果区伸缩） -->
+      <div
+        class="w-full lg:w-[440px] lg:flex-shrink-0 bg-[#111827] rounded-xl border border-gray-800 p-6 glow"
+      >
+        <div class="border-b border-gray-800 pb-4 mb-6">
+          <h1 class="text-xl font-bold text-indigo-400">⚡ CRUSH_CHAT_CARD_GENERATOR v1.0</h1>
+          <p class="text-xs text-gray-500 mt-1">
+            本地渲染引擎 · 100% 浏览器端运行 · API Key 与聊天记录均不离开你的设备
+          </p>
+        </div>
+
+        <!-- Tab 导航：用「诊断」「设置」两 tab 隔离 API 调用串输入与主功能。
+             设置 tab 的 input 由 JS 在切换时动态注入/移除 DOM，
+             主功能 tab 加载时页面里没有任何调用串字段，
+             避开 Chrome 密码管理器对「API Key」类字段的启发式接管（曾导致 textarea 回车被吞）。 -->
+        <div class="flex border-b border-gray-800 mb-4 -mt-2">
+          <button
+            type="button"
+            data-tab="main"
+            class="tab-btn px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-indigo-300"
+          >
+            诊断
+          </button>
+          <button
+            type="button"
+            data-tab="settings"
+            class="tab-btn px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-indigo-300"
+          >
+            设置
+          </button>
+        </div>
+
+        <!-- Tab 内容挂载点：每次切 tab 都清空再写入，对应 tab 的 input 才会进入 DOM -->
+        <div id="tabContent"></div>
       </div>
 
-      <!-- Tab 导航：用「诊断」「设置」两 tab 隔离 API 调用串输入与主功能。
-           设置 tab 的 input 由 JS 在切换时动态注入/移除 DOM，
-           主功能 tab 加载时页面里没有任何调用串字段，
-           避开 Chrome 密码管理器对「API Key」类字段的启发式接管（曾导致 textarea 回车被吞）。 -->
-      <div class="flex border-b border-gray-800 mb-4 -mt-2">
-        <button
-          type="button"
-          data-tab="main"
-          class="tab-btn px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-indigo-300"
+      <!-- 右栏：结果展示区（始终在位，没结果时显示占位提示） -->
+      <div class="w-full lg:flex-1 flex flex-col items-center">
+        <!-- 导出控制台：仅在生成卡片后显示 -->
+        <div id="exportBar" class="hidden w-full flex justify-end mb-4 gap-4">
+          <button
+            id="exportBtn"
+            type="button"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-4 rounded transition duration-200"
+          >
+            📥 导出无损诊断卡片 (PNG)
+          </button>
+        </div>
+
+        <!-- 占位提示：还没诊断时填满右栏，避免空荡 -->
+        <div
+          id="resultPlaceholder"
+          class="w-full min-h-[320px] flex flex-col items-center justify-center text-center border border-dashed border-gray-800 rounded-xl text-gray-600"
         >
-          诊断
-        </button>
-        <button
-          type="button"
-          data-tab="settings"
-          class="tab-btn px-4 py-2 text-xs font-bold border-b-2 border-transparent text-gray-400 hover:text-indigo-300"
-        >
-          设置
-        </button>
+          <div class="text-4xl mb-3">🩺</div>
+          <p class="text-sm">诊断结果会显示在这里</p>
+          <p class="text-xs mt-1 text-gray-700">在左侧粘贴聊天记录，点击「开始诊断」</p>
+        </div>
+
+        <!-- 诊断卡片：由对应的报告模块渲染后插入此处 -->
+        <div id="cardSlot" class="w-full flex justify-center"></div>
       </div>
-
-      <!-- Tab 内容挂载点：每次切 tab 都清空再写入，对应 tab 的 input 才会进入 DOM -->
-      <div id="tabContent"></div>
-    </div>
-
-    <!-- 结果展示区 -->
-    <div id="resultWrapper" class="hidden w-full max-w-xl flex flex-col items-center">
-      <!-- 导出控制台 -->
-      <div class="w-full flex justify-end mb-4 gap-4">
-        <button
-          id="exportBtn"
-          type="button"
-          class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-4 rounded transition duration-200"
-        >
-          📥 导出无损诊断卡片 (PNG)
-        </button>
-      </div>
-
-      <!-- 诊断卡片：由对应的报告模块渲染后插入此处 -->
-      <div id="cardSlot" class="w-full flex justify-center"></div>
     </div>
 
     <script type="module" src="/src/main.js"></script>
