@@ -58,7 +58,6 @@ npm run preview  # 本地预览构建产物
 
 ```
 .
-├── .github/workflows/deploy.yml   # GitHub Pages 自动部署
 ├── src/
 │   ├── modules/
 │   │   ├── reports/               # 报告模块：一种诊断视角 = 一个文件
