@@ -58,6 +58,7 @@ npm run preview  # 本地预览构建产物
 
 ```
 .
+├── .github/workflows/deploy.yml   # 推送 main 自动部署到 Cloudflare Pages
 ├── src/
 │   ├── modules/
 │   │   ├── reports/               # 报告模块：一种诊断视角 = 一个文件
@@ -95,7 +96,16 @@ npm run preview  # 本地预览构建产物
 
 线上地址：<https://crush-chat-debugger.pages.dev>（Cloudflare Pages）。
 
-本地构建并发布到 Cloudflare Pages：
+推送到 `main` 分支后，GitHub Actions 会自动构建并部署到 Cloudflare Pages
+（见 [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)）。
+需在仓库 **Settings → Secrets and variables → Actions** 配置两个 secret：
+
+| Secret 名               | 值                                                  |
+| ----------------------- | --------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | Cloudflare API Token（需 **Cloudflare Pages: Edit** 权限） |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账号 ID                                   |
+
+也可在本地手动部署：
 
 ```bash
 npm run deploy   # 等价于 npm run deploy:cf：构建后 wrangler pages deploy
