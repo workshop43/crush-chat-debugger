@@ -3,6 +3,8 @@
 > 把你和 Crush 的聊天记录交给 AI，用毒舌的专业视角生成一张赛博朋克风格的
 > **诊断卡片**，并一键导出为无损 PNG。
 
+🔗 **在线体验**：<https://crush-chat-debugger.pages.dev>
+
 支持四种完全不同的诊断视角，各有独立的提示词、数据结构与卡片 UI：
 
 - 💻 **毒舌系统架构师** → 一份《系统事故报告》：Traceback、根因分析、修复补丁
@@ -92,9 +94,13 @@ npm run preview  # 本地预览构建产物
 
 ## 🌐 部署
 
-推送到 `main` 分支后，GitHub Actions 会自动构建并发布到 GitHub Pages。
-首次使用需在仓库 **Settings → Pages → Build and deployment → Source** 选择
-**GitHub Actions**。
+线上地址：<https://crush-chat-debugger.pages.dev>（Cloudflare Pages）。
+
+本地构建并发布到 Cloudflare Pages：
+
+```bash
+npm run deploy   # 等价于 npm run deploy:cf：构建后 wrangler pages deploy
+```
 
 ## ⚠️ 模型说明
 
